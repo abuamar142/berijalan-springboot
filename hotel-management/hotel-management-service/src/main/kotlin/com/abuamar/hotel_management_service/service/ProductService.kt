@@ -7,4 +7,5 @@ interface ProductService {
     fun getProducts(): List<ResProduct>
     fun getProductById(id: Int): ResProduct?
     fun updateProduct(req: ReqProduct): ResProduct
+    fun deleteUserProducts(userId: Int)
 }

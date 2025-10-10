@@ -14,4 +14,14 @@ interface MasterProductRepository: JpaRepository<MasterProductEntity, Int> {
         nativeQuery = true
     )
     override fun findAll(): List<MasterProductEntity>
+
+    @Query(
+        """
+            SELECT * FROM mst_product
+            WHERE user_id = :userId
+            AND is_delete = false
+        """,
+        nativeQuery = true
+    )
+    fun findAllByUserId(userId: Int): List<MasterProductEntity>
 }

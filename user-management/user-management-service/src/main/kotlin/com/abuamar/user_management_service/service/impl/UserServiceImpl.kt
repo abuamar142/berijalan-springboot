@@ -4,7 +4,9 @@ import com.abuamar.user_management_service.domain.dto.req.ReqUserUpdate
 import com.abuamar.user_management_service.domain.dto.res.ResUser
 import com.abuamar.user_management_service.domain.dto.res.ResUserById
 import com.abuamar.user_management_service.domain.dto.res.ResUserId
+import com.abuamar.user_management_service.domain.constant.TopicKafka
 import com.abuamar.user_management_service.exception.CustomException
+import com.abuamar.user_management_service.producer.KafkaProducer
 import com.abuamar.user_management_service.repository.MasterUserRepository
 import com.abuamar.user_management_service.service.UserService
 import jakarta.servlet.http.HttpServletRequest
@@ -14,7 +16,8 @@ import org.springframework.stereotype.Service
 @Service
 class UserServiceImpl(
     private val masterUserRepository: MasterUserRepository,
-    private val httpServletRequest: HttpServletRequest
+    private val httpServletRequest: HttpServletRequest,
+    private val kafkaProducer: KafkaProducer<Any>,
 ): UserService {
     override fun findAllUser(): List<ResUser> {
         val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
@@ -117,6 +120,8 @@ class UserServiceImpl(
         user.isDeleted = true
 
         masterUserRepository.save(user)
+
+        kafkaProducer.sendMessage(TopicKafka.DELETE_USER_PRODUCT, user.id.toString())
     }
 
     override fun getUsersByUniqueIds(userIds: List<Int>): List<ResUserId> {

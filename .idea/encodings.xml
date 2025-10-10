@@ -3,6 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/gateway/gateway/src/main/kotlin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/hotel-management/hotel-management-service/src/main/kotlin" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/order-management/order-management-service/src/main/kotlin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/service-registry/service-registry/src/main/kotlin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/user-management/user-management-service/src/main/kotlin" charset="UTF-8" />
   </component>

@@ -1,5 +1,6 @@
 package com.abuamar.hotel_management_service.service.impl
 
+import com.abuamar.hotel_management_service.domain.constant.TopicKafka
 import com.abuamar.hotel_management_service.domain.dto.req.ReqProduct
 import com.abuamar.hotel_management_service.domain.dto.res.ResProduct
 import com.abuamar.hotel_management_service.exception.CustomException
@@ -7,6 +8,7 @@ import com.abuamar.hotel_management_service.repository.MasterProductRepository
 import com.abuamar.hotel_management_service.rest.UserClient
 import com.abuamar.hotel_management_service.service.ProductService
 import jakarta.servlet.http.HttpServletRequest
+import org.apache.kafka.clients.producer.KafkaProducer
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 
@@ -14,7 +16,8 @@ import org.springframework.stereotype.Service
 class ProductServiceImpl(
     val productRepository: MasterProductRepository,
     val userClient: UserClient,
-    private val httpServletRequest: HttpServletRequest
+    private val httpServletRequest: HttpServletRequest,
+    private val kafkaProducer:
 ): ProductService {
     override fun getProducts(): List<ResProduct> {
         val rawData = productRepository.findAll().ifEmpty {
@@ -87,6 +90,22 @@ class ProductServiceImpl(
             createdAt = updatedProduct.createdAt!!,
             createdBy = updatedProduct.createdBy ?: "",
             updatedBy = updatedProduct.updatedBy ?: "",
+        )
+    }
+
+    override fun deleteUserProducts(userId: Int) {
+        val userProductList = productRepository.findAllByUserId(userId)
+
+        userProductList.forEach { product ->
+            product.isDelete = true
+            product.updatedBy = httpServletRequest.getHeader("X-USER-ID") ?: "Unknown"
+        }
+
+        productRepository.saveAll(userProductList)
+        kafkaProducer.(
+            TopicKafka.DELETE_USER_PRODUCT,
+            userId.toString(),
+            "User with id $userId has been deleted along with their products"
         )
     }
 }
