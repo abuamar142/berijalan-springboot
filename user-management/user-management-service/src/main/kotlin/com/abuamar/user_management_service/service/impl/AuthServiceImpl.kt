@@ -62,8 +62,10 @@ class AuthServiceImpl(
             username = req.username,
             password = req.password,
             fullName = req.fullName,
-            role = role
+            role = role,
         )
+
+        user.createdBy = "SYSTEM"
 
         val userDb = userRepository.save(user)
 
@@ -73,7 +75,7 @@ class AuthServiceImpl(
             fullName = userDb.fullName,
             roleName = userDb.role?.name,
             createdAt = userDb.createdAt!!,
-            createdBy = userDb.createdBy
+            createdBy = userDb.createdBy ?: "SYSTEM"
         )
     }
 

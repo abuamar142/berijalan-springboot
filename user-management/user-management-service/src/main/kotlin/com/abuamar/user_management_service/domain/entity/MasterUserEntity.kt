@@ -9,8 +9,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
-import java.sql.Timestamp
 
 @Entity
 @Table(name = "mst_user")
@@ -32,14 +30,4 @@ data class MasterUserEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = true)
     val role: MasterRoleEntity? = null,
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
-    val createdAt: Timestamp? = null,
-
-    @Column(name = "created_by", nullable = false)
-    val createdBy: String = "SYSTEM",
-
-    @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false,
-)
+) : BaseEntity()

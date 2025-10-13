@@ -10,5 +10,6 @@ interface UserService {
     fun findUserById(id: Int): ResUserById
     fun updateUserById(req: ReqUserUpdate): ResUserById
     fun deleteUserById(id: Int)
+    fun restoreUserById(id: Int)
     fun getUsersByUniqueIds(userIds: List<Int>): List<ResUserId>
 }

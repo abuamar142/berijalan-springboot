@@ -17,4 +17,4 @@ data class MasterRoleEntity(
 
     @Column(name = "name", nullable = false)
     val name: String
-)
+) : BaseEntity()

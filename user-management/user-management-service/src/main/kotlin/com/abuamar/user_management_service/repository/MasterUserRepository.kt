@@ -9,7 +9,7 @@ interface MasterUserRepository: JpaRepository<MasterUserEntity, Int> {
         """
         SELECT * FROM mst_user
         WHERE username = :username
-        AND is_deleted = false
+        AND is_delete = false
         """,
         nativeQuery = true
     )
@@ -19,7 +19,7 @@ interface MasterUserRepository: JpaRepository<MasterUserEntity, Int> {
         """
         SELECT * FROM mst_user
         WHERE id IN :userIds
-        AND is_deleted = false
+        AND is_delete = false
         """,
         nativeQuery = true
     )

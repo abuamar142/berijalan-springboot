@@ -8,6 +8,7 @@ import com.abuamar.user_management_service.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -57,6 +58,19 @@ class UserController(
             BaseResponse(
                 success = true,
                 message = "Success delete user with id $id"
+            )
+        )
+    }
+
+    @PatchMapping("/{id}")
+    fun restoreUserById(
+        @PathVariable id: Int
+    ): ResponseEntity<BaseResponse<String>> {
+        userService.restoreUserById(id)
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = "Success restore user with id $id"
             )
         )
     }
