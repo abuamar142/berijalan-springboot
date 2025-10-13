@@ -38,7 +38,7 @@ class UserServiceImpl(
                 username = user.username,
                 fullName = user.fullName,
                 createdAt = user.createdAt!!,
-                createdBy = user.createdBy
+                createdBy = user.createdBy ?: "SYSTEM",
             )
         }
     }
@@ -54,7 +54,7 @@ class UserServiceImpl(
             )
         }
 
-        val result = masterUserRepository.findById(id).orElseThrow {
+        val result = masterUserRepository.findUserActiveById(id).orElseThrow {
             throw CustomException(
                 "User with id $id not found",
                 HttpStatus.NOT_FOUND.value()
@@ -89,7 +89,7 @@ class UserServiceImpl(
             )
         }
 
-        val user = masterUserRepository.findById(req.id).orElseThrow {
+        val user = masterUserRepository.findUserActiveById(req.id).orElseThrow {
             throw Exception("User with id ${req.id} not found")
         }
 
@@ -101,7 +101,7 @@ class UserServiceImpl(
         }
 
         val updaterId = httpServletRequest.getHeader("X-USER-ID")
-        val updater = masterUserRepository.findById(updaterId!!.toInt()).orElseThrow {
+        val updater = masterUserRepository.findUserActiveById(updaterId!!.toInt()).orElseThrow {
             throw CustomException(
                 "Updater with id $updaterId not found",
                 HttpStatus.NOT_FOUND.value()
@@ -136,7 +136,7 @@ class UserServiceImpl(
             )
         }
 
-        val user = masterUserRepository.findById(id).orElseThrow {
+        val user = masterUserRepository.findUserActiveById(id).orElseThrow {
             throw CustomException(
                 "User with id $id not found",
                 HttpStatus.NOT_FOUND.value()
@@ -151,7 +151,7 @@ class UserServiceImpl(
         }
 
         val adminId = httpServletRequest.getHeader("X-USER-ID")
-        val admin = masterUserRepository.findById(adminId!!.toInt()).orElseThrow {
+        val admin = masterUserRepository.findUserActiveById(adminId!!.toInt()).orElseThrow {
             throw CustomException(
                 "Admin with id $adminId not found",
                 HttpStatus.NOT_FOUND.value()
@@ -162,6 +162,7 @@ class UserServiceImpl(
         user.deletedAt = Timestamp(System.currentTimeMillis())
 
         user.isDelete = true
+        user.isActive = false
 
         masterUserRepository.save(user)
 
@@ -193,7 +194,7 @@ class UserServiceImpl(
         }
 
         val adminId = httpServletRequest.getHeader("X-USER-ID")
-        val admin = masterUserRepository.findById(adminId!!.toInt()).orElseThrow {
+        val admin = masterUserRepository.findUserActiveById(adminId!!.toInt()).orElseThrow {
             throw CustomException(
                 "Admin with id $adminId not found",
                 HttpStatus.NOT_FOUND.value()
@@ -207,6 +208,7 @@ class UserServiceImpl(
         user.deletedAt = null
 
         user.isDelete = false
+        user.isActive = true
 
         masterUserRepository.save(user)
     }

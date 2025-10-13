@@ -11,9 +11,9 @@ class RoleServiceImpl(
      private val masterRoleRepository: MasterRoleRepository
 ): RoleService {
     override fun findRoles(): List<ResRole> {
-        val rawData: List<MasterRoleEntity> = masterRoleRepository.findAll()
+        val roles: List<MasterRoleEntity> = masterRoleRepository.findAll()
 
-        return rawData.map { role ->
+        return roles.map { role ->
             ResRole(
                 id = role.id,
                 name = role.name
