@@ -1,4 +1,4 @@
-package com.abuamar.order_management_service.domain.entitiy
+package com.abuamar.order_management_service.domain.entity
 
 import com.abuamar.order_management_service.domain.enum.RoomStatus
 import jakarta.persistence.*

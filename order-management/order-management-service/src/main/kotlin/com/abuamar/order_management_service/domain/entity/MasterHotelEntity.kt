@@ -1,4 +1,4 @@
-package com.abuamar.order_management_service.domain.entitiy
+package com.abuamar.order_management_service.domain.entity
 
 import jakarta.persistence.*
 import java.sql.Timestamp

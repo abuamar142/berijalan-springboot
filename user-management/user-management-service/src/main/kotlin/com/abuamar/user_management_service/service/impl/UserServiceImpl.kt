@@ -97,6 +97,25 @@ class UserServiceImpl(
         )
     }
 
+    // For internal service calls (no authentication required)
+    override fun findUserByIdInternal(id: Int): ResUserById {
+        val result = masterUserRepository.findUserActiveById(id).orElseThrow {
+            CustomException(
+                "${AppConstants.ERR_USER_NOT_FOUND} with id $id",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+
+        return ResUserById(
+            id = result.id,
+            username = result.username,
+            fullName = result.fullName,
+            roleName = result.role?.name,
+            createdAt = result.createdAt!!,
+            createdBy = result.createdBy ?: AppConstants.SYSTEM_USER
+        )
+    }
+
     @Transactional
     override fun updateUserById(req: ReqUserUpdate): ResUserById {
         val authenticatedUserId = getAuthenticatedUserId()

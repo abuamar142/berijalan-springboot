@@ -40,6 +40,17 @@ class GatewayConfig(
                         f.filters(authHeaderFilter)
                     }
                     .uri("lb://hotel-management-service")
+            }.route("order-management-service") { r: PredicateSpec ->
+                r.path("/gateway/order-management/**")
+                    .filters { f: GatewayFilterSpec ->
+                        f.rewritePath(
+                            "/gateway/order-management/(?<segment>.*)",
+                            "/order-management/\${segment}"
+                        )
+                        // Apply the auth filter
+                        f.filters(authHeaderFilter)
+                    }
+                    .uri("lb://order-management-service")
             }.build()
     }
 

@@ -1,10 +1,12 @@
 package com.abuamar.user_management_service.controller
 
 import com.abuamar.user_management_service.domain.dto.res.BaseResponse
+import com.abuamar.user_management_service.domain.dto.res.ResUserById
 import com.abuamar.user_management_service.domain.dto.res.ResUserId
 import com.abuamar.user_management_service.service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -23,6 +25,19 @@ class DataSourceController(
                 success = true,
                 message = "Success get users by ids",
                 data = userService.getUsersByUniqueIds(userIds),
+            )
+        )
+    }
+
+    @GetMapping("/{id}")
+    fun getUserById(
+        @PathVariable id: Int
+    ): ResponseEntity<BaseResponse<ResUserById>> {
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = "Success get user by id",
+                data = userService.findUserByIdInternal(id),  // Use internal method (no auth)
             )
         )
     }
