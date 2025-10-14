@@ -1,0 +1,165 @@
+// Users Table
+Table mst_user {
+  id int [pk, increment]
+  username varchar(100) [not null, unique]
+  password varchar(255) [not null]
+  full_name varchar(100) [not null]
+  role_id int
+  is_active boolean [default: true]
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+  
+  indexes {
+    username
+    is_delete
+  }
+}
+
+// Roles Table
+Table mst_role {
+  id int [pk, increment]
+  name varchar(255) [not null]
+  is_active boolean [default: true]
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+}
+
+// Room Table
+Table mst_room {
+  id int [pk, increment]
+  room_number varchar(20) [not null]
+  type varchar(50) [not null, note: 'Standard, Deluxe, Suite, Presidential']
+  price decimal(15,2) [not null, note: 'Price per night']
+  capacity int [not null, note: 'Max number of guests']
+  description text
+  status varchar(20) [not null, default: 'AVAILABLE', note: 'AVAILABLE, MAINTENANCE, RESERVED']
+  is_active boolean [default: true]
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+  
+  indexes {
+    room_number
+    status
+    is_delete
+  }
+}
+
+// Amenity Table
+Table mst_amenity {
+  id int [pk, increment]
+  name varchar(100) [not null, unique, note: 'WiFi, AC, TV, Mini Bar, etc']
+  description varchar(500)
+  icon varchar(50) [note: 'Icon name for UI']
+  is_active boolean [default: true]
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+  
+  indexes {
+    name
+    is_delete
+  }
+}
+
+// Room-Amenity Relation (Many-to-Many)
+Table trn_room_amenity {
+  id int [pk, increment]
+  room_id int [not null]
+  amenity_id int [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  
+  indexes {
+    (room_id, amenity_id) [unique]
+  }
+}
+
+// Order Table
+Table trn_order {
+  id int [pk, increment]
+  order_number varchar(50) [not null, unique, note: 'ORD-YYYYMMDD-XXXXX']
+  user_id int [not null]
+  room_id int [not null]
+  check_in_date date [not null]
+  check_out_date date [not null]
+  nights int [not null, note: 'Calculated: check_out - check_in']
+  guest_count int [not null]
+  total_amount decimal(15,2) [not null, note: 'nights * room.price']
+  special_requests text
+  status varchar(20) [not null, default: 'PENDING', note: 'PENDING, CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED, COMPLETED']
+  payment_status varchar(20) [not null, default: 'UNPAID', note: 'UNPAID, PARTIAL, PAID, REFUNDED']
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+  
+  indexes {
+    order_number
+    user_id
+    room_id
+    check_in_date
+    check_out_date
+    status
+    payment_status
+    is_delete
+  }
+}
+
+// Payment List Table
+Table trn_list_payment {
+  id int [pk, increment]
+  order_id int [not null]
+  payment_method varchar(50) [not null, note: 'CREDIT_CARD, BANK_TRANSFER, E_WALLET, CASH']
+  payment_amount decimal(15,2) [not null]
+  payment_date timestamp [not null]
+  transaction_id varchar(100) [unique, note: 'From payment gateway']
+  payment_reference varchar(100) [note: 'Bank reference / receipt number']
+  payment_status varchar(20) [not null, default: 'PENDING', note: 'PENDING, SUCCESS, FAILED, CANCELLED, REFUNDED']
+  payment_gateway varchar(50) [note: 'Midtrans, Xendit, etc']
+  notes text
+  is_delete boolean [default: false]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by varchar(100)
+  updated_at timestamp
+  updated_by varchar(100)
+  deleted_at timestamp
+  deleted_by varchar(100)
+  
+  indexes {
+    order_id
+    transaction_id
+    payment_status
+    payment_date
+    is_delete
+  }
+}
+
+// Relationships
+Ref: mst_user.role_id > mst_role.id [delete: restrict]
+Ref: trn_room_amenity.room_id > mst_room.id [delete: cascade]
+Ref: trn_room_amenity.amenity_id > mst_amenity.id [delete: cascade]
+Ref: trn_order.user_id > mst_user.id [delete: restrict]
+Ref: trn_order.room_id > mst_room.id [delete: restrict]
+Ref: trn_list_payment.order_id > trn_order.id [delete: cascade]
