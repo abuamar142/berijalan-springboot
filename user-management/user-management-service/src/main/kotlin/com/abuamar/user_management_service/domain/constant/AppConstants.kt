@@ -19,7 +19,7 @@ object AppConstants {
     const val ERR_USER_DELETED = "User is deleted"
     const val ERR_USER_ALREADY_DELETED = "User is already deleted"
     const val ERR_USER_INACTIVE = "User is inactive"
-    const val ERR_USER_NOT_DELETED = "User is not deleted"
+    const val ERR_ALREADY_ACTIVE = "User is already active"
     const val ERR_ADMIN_NOT_FOUND = "Admin not found"
     const val ERR_ROLE_NOT_FOUND = "Role not found"
     const val ERR_AUTH_HEADER_MISSING = "Authentication header missing"

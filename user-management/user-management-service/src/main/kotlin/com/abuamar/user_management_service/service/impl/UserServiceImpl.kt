@@ -87,13 +87,6 @@ class UserServiceImpl(
             )
         }
 
-        if (result.isDelete) {
-            throw CustomException(
-                "${AppConstants.ERR_USER_DELETED} with id $id",
-                HttpStatus.BAD_REQUEST.value()
-            )
-        }
-
         return ResUserById(
             id = result.id,
             username = result.username,
@@ -160,13 +153,6 @@ class UserServiceImpl(
             )
         }
 
-        if (user.isDelete) {
-            throw CustomException(
-                AppConstants.ERR_USER_ALREADY_DELETED + " with id $id",
-                HttpStatus.BAD_REQUEST.value()
-            )
-        }
-
         val admin = masterUserRepository.findUserActiveById(getAuthenticatedUserId()).orElseThrow {
             throw CustomException(
                 AppConstants.ERR_ADMIN_NOT_FOUND + " with id ${getAuthenticatedUserId()}",
@@ -197,7 +183,7 @@ class UserServiceImpl(
 
         if (!user.isDelete) {
             throw CustomException(
-                AppConstants.ERR_USER_NOT_DELETED + " with id $id",
+                AppConstants.ERR_ALREADY_ACTIVE + " with id $id",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
