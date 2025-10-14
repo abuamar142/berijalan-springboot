@@ -5,14 +5,14 @@ import com.abuamar.hotel_management_service.domain.dto.req.ReqCreateRoom
 import com.abuamar.hotel_management_service.domain.dto.req.ReqUpdateRoom
 import com.abuamar.hotel_management_service.domain.dto.res.ResAmenity
 import com.abuamar.hotel_management_service.domain.dto.res.ResRoom
-import com.abuamar.hotel_management_service.domain.entitiy.MasterRoomEntity
+import com.abuamar.hotel_management_service.domain.entity.MasterRoomEntity
 import com.abuamar.hotel_management_service.domain.enum.RoomStatus
 import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterAmenityRepository
 import com.abuamar.hotel_management_service.repository.MasterRoomRepository
 import com.abuamar.hotel_management_service.repository.RoomAmenityRepository
 import com.abuamar.hotel_management_service.service.RoomService
-import com.abuamar.hotel_management_service.domain.entitiy.RoomAmenityEntity
+import com.abuamar.hotel_management_service.domain.entity.RoomAmenityEntity
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

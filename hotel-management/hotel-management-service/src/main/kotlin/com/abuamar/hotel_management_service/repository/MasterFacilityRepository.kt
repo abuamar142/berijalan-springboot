@@ -1,6 +1,6 @@
 package com.abuamar.hotel_management_service.repository
 
-import com.abuamar.hotel_management_service.domain.entitiy.MasterFacilityEntity
+import com.abuamar.hotel_management_service.domain.entity.MasterFacilityEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.util.Optional

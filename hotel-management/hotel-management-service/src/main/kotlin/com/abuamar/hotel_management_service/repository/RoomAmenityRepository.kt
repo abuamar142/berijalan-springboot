@@ -1,6 +1,6 @@
 package com.abuamar.hotel_management_service.repository
 
-import com.abuamar.hotel_management_service.domain.entitiy.RoomAmenityEntity
+import com.abuamar.hotel_management_service.domain.entity.RoomAmenityEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

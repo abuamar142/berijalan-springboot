@@ -1,4 +1,4 @@
-package com.abuamar.hotel_management_service.domain.entitiy
+package com.abuamar.hotel_management_service.domain.entity
 
 import com.abuamar.hotel_management_service.domain.enum.RoomStatus
 import jakarta.persistence.*

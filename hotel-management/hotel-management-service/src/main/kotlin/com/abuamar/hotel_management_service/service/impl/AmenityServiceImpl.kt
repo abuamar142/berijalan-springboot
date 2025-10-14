@@ -4,7 +4,7 @@ import com.abuamar.hotel_management_service.domain.constant.AppConstants
 import com.abuamar.hotel_management_service.domain.dto.req.ReqCreateAmenity
 import com.abuamar.hotel_management_service.domain.dto.req.ReqUpdateAmenity
 import com.abuamar.hotel_management_service.domain.dto.res.ResAmenity
-import com.abuamar.hotel_management_service.domain.entitiy.MasterAmenityEntity
+import com.abuamar.hotel_management_service.domain.entity.MasterAmenityEntity
 import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterAmenityRepository
 import com.abuamar.hotel_management_service.service.AmenityService

@@ -1,4 +1,4 @@
-package com.abuamar.hotel_management_service.domain.entitiy
+package com.abuamar.hotel_management_service.domain.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass

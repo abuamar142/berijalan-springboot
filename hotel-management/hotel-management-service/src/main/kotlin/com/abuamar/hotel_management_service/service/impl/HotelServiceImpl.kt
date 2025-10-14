@@ -5,7 +5,7 @@ import com.abuamar.hotel_management_service.domain.dto.req.ReqCreateHotel
 import com.abuamar.hotel_management_service.domain.dto.req.ReqUpdateHotel
 import com.abuamar.hotel_management_service.domain.dto.res.ResFacility
 import com.abuamar.hotel_management_service.domain.dto.res.ResHotel
-import com.abuamar.hotel_management_service.domain.entitiy.MasterHotelEntity
+import com.abuamar.hotel_management_service.domain.entity.MasterHotelEntity
 import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterFacilityRepository
 import com.abuamar.hotel_management_service.repository.MasterHotelRepository

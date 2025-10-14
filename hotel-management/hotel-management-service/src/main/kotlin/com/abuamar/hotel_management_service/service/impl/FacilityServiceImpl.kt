@@ -4,7 +4,7 @@ import com.abuamar.hotel_management_service.domain.constant.AppConstants
 import com.abuamar.hotel_management_service.domain.dto.req.ReqCreateFacility
 import com.abuamar.hotel_management_service.domain.dto.req.ReqUpdateFacility
 import com.abuamar.hotel_management_service.domain.dto.res.ResFacility
-import com.abuamar.hotel_management_service.domain.entitiy.MasterFacilityEntity
+import com.abuamar.hotel_management_service.domain.entity.MasterFacilityEntity
 import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterFacilityRepository
 import com.abuamar.hotel_management_service.service.FacilityService
