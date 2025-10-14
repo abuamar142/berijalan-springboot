@@ -39,6 +39,17 @@ class RoomController(
             )
         )
     }
+
+    @GetMapping("/available")
+    fun getAvailableRooms(): ResponseEntity<BaseResponse<List<ResRoom>>> {
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = "Success get available rooms",
+                data = roomService.getAvailableRooms(),
+            )
+        )
+    }
     
     @PostMapping
     fun createRoom(

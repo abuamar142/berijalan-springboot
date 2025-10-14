@@ -92,6 +92,19 @@ class RoomServiceImpl(
 
         return mapToResRoom(room)
     }
+
+    override fun getAvailableRooms(): List<ResRoom> {
+        val rooms = roomRepository.findAvailableRooms()
+        
+        if (rooms.isEmpty()) {
+            throw CustomException(
+                AppConstants.ERR_NO_ROOMS_FOUND,
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+
+        return rooms.map { mapToResRoom(it) }
+    }
     
     @Transactional
     override fun createRoom(req: ReqCreateRoom): ResRoom {
