@@ -31,7 +31,9 @@ object AppConstants {
     
     // Error Messages - Hotel
     const val ERR_HOTEL_NOT_FOUND = "Hotel not found"
+    const val ERR_HOTEL_ALREADY_ACTIVE = "Hotel is already active"
     const val ERR_NO_HOTELS_FOUND = "No hotels found"
+    const val ERR_HOTEL_ALREADY_EXISTS = "Hotel with this name already exists"
     
     // Error Messages - Room
     const val ERR_ROOM_NOT_FOUND = "Room not found"
