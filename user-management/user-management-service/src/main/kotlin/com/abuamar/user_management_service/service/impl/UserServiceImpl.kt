@@ -8,6 +8,7 @@ import com.abuamar.user_management_service.domain.constant.TopicKafka
 import com.abuamar.user_management_service.exception.CustomException
 import com.abuamar.user_management_service.producer.KafkaProducer
 import com.abuamar.user_management_service.repository.MasterUserRepository
+import com.abuamar.user_management_service.service.AsyncUserService
 import com.abuamar.user_management_service.service.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
@@ -19,6 +20,7 @@ class UserServiceImpl(
     private val masterUserRepository: MasterUserRepository,
     private val httpServletRequest: HttpServletRequest,
     private val kafkaProducer: KafkaProducer<Any>,
+    private val asyncUserService: AsyncUserService
 ): UserService {
     override fun findAllUser(): List<ResUser> {
         val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
@@ -219,6 +221,12 @@ class UserServiceImpl(
                 userId = it.id,
                 fullName = it.fullName
             )
+        }
+    }
+
+    override fun bulkDeleteUsers(userIds: List<Int>) {
+        userIds.forEach { userId ->
+            asyncUserService.asyncDeleteUsers(userId)
         }
     }
 }

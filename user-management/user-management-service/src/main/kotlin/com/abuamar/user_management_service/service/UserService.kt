@@ -12,4 +12,5 @@ interface UserService {
     fun deleteUserById(id: Int)
     fun restoreUserById(id: Int)
     fun getUsersByUniqueIds(userIds: List<Int>): List<ResUserId>
+    fun bulkDeleteUsers(userIds: List<Int>)
 }

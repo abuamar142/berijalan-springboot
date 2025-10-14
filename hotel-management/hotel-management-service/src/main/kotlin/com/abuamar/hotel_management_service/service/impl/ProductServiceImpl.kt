@@ -9,6 +9,7 @@ import com.abuamar.hotel_management_service.rest.UserClient
 import com.abuamar.hotel_management_service.service.ProductService
 import jakarta.servlet.http.HttpServletRequest
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 
@@ -17,8 +18,10 @@ class ProductServiceImpl(
     val productRepository: MasterProductRepository,
     val userClient: UserClient,
     private val httpServletRequest: HttpServletRequest,
-    private val kafkaProducer:
 ): ProductService {
+    @Cacheable(
+        "getProducts"
+    )
     override fun getProducts(): List<ResProduct> {
         val rawData = productRepository.findAll().ifEmpty {
             throw CustomException(
@@ -102,10 +105,5 @@ class ProductServiceImpl(
         }
 
         productRepository.saveAll(userProductList)
-        kafkaProducer.(
-            TopicKafka.DELETE_USER_PRODUCT,
-            userId.toString(),
-            "User with id $userId has been deleted along with their products"
-        )
     }
 }

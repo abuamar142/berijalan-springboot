@@ -12,11 +12,19 @@ spring:
         format_sql: true
         show_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: true
     hibernate:
       ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    redis:
+      time-to-live: 30m
 
 kafka:
-  bootstrap-servers: localhost:9082
+  bootstrap-servers: localhost:9092
 
 server:
   port: 9500

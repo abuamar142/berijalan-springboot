@@ -1,5 +1,6 @@
 package com.abuamar.hotel_management_service.domain.dto.res
 
+import java.io.Serializable
 import java.sql.Timestamp
 
 data class ResProduct(
@@ -10,4 +11,4 @@ data class ResProduct(
     val updatedBy: String? = null,
     val createdAt: Timestamp,
     val createdBy: String,
-)
+): Serializable

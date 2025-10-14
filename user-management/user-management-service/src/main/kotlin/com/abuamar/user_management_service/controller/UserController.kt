@@ -87,4 +87,17 @@ class UserController(
             )
         )
     }
+
+    @DeleteMapping("/bulk-delete")
+    fun bulkDeleteUsers(
+        @RequestBody req: List<Int>
+    ): ResponseEntity<BaseResponse<String>> {
+        userService.bulkDeleteUsers(req)
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = "Success bulk delete users"
+            )
+        )
+    }
 }
