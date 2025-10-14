@@ -1,10 +1,12 @@
 package com.abuamar.user_management_service.service.impl
 
+import com.abuamar.user_management_service.domain.constant.AppConstants
 import com.abuamar.user_management_service.domain.dto.req.ReqUserUpdate
 import com.abuamar.user_management_service.domain.dto.res.ResUser
 import com.abuamar.user_management_service.domain.dto.res.ResUserById
 import com.abuamar.user_management_service.domain.dto.res.ResUserId
 import com.abuamar.user_management_service.domain.constant.TopicKafka
+import com.abuamar.user_management_service.domain.entity.MasterUserEntity
 import com.abuamar.user_management_service.exception.CustomException
 import com.abuamar.user_management_service.producer.KafkaProducer
 import com.abuamar.user_management_service.repository.MasterUserRepository
@@ -13,6 +15,7 @@ import com.abuamar.user_management_service.service.UserService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 
 @Service
@@ -22,15 +25,36 @@ class UserServiceImpl(
     private val kafkaProducer: KafkaProducer<Any>,
     private val asyncUserService: AsyncUserService
 ): UserService {
-    override fun findAllUser(): List<ResUser> {
-        val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
+    // Helper Functions
+    private fun getAuthenticatedUserId(): Int {
+        return httpServletRequest.getHeader(AppConstants.HEADER_USER_ID).toInt()
+    }
 
-        if (!isAdmin) {
+    private fun isAdmin(): Boolean {
+        return httpServletRequest.getHeader(AppConstants.HEADER_USER_AUTHORITY) == AppConstants.ROLE_ADMIN
+    }
+
+    private fun requireAdmin() {
+        if (!isAdmin()) {
             throw CustomException(
-                "You are not authorized to access this resource",
+                AppConstants.ERR_UNAUTHORIZED,
                 HttpStatus.FORBIDDEN.value()
             )
         }
+    }
+    
+    private fun getAuthenticatedUser(): MasterUserEntity {
+        val userId = getAuthenticatedUserId()
+        return masterUserRepository.findUserActiveById(userId).orElseThrow {
+            CustomException(
+                "${AppConstants.ERR_USER_NOT_FOUND} with id $userId",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+    }
+    
+    override fun findAllUser(): List<ResUser> {
+        requireAdmin()
 
         val rawData = masterUserRepository.findAll()
 
@@ -40,32 +64,32 @@ class UserServiceImpl(
                 username = user.username,
                 fullName = user.fullName,
                 createdAt = user.createdAt!!,
-                createdBy = user.createdBy ?: "SYSTEM",
+                createdBy = user.createdBy ?: AppConstants.SYSTEM_USER,
             )
         }
     }
 
     override fun findUserById(id: Int): ResUserById {
-        val isSelf: Boolean = httpServletRequest.getHeader("X-USER-ID")?.toInt() == id
-        val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
+        val authenticatedUserId = getAuthenticatedUserId()
+        val isSelf = authenticatedUserId == id
 
-        if (!isSelf && !isAdmin) {
+        if (!isSelf && !isAdmin()) {
             throw CustomException(
-                "You are not authorized to access this resource",
+                AppConstants.ERR_UNAUTHORIZED,
                 HttpStatus.FORBIDDEN.value()
             )
         }
 
         val result = masterUserRepository.findUserActiveById(id).orElseThrow {
-            throw CustomException(
-                "User with id $id not found",
+            CustomException(
+                "${AppConstants.ERR_USER_NOT_FOUND} with id $id",
                 HttpStatus.NOT_FOUND.value()
             )
         }
 
         if (result.isDelete) {
             throw CustomException(
-                "User with id $id is deleted",
+                "${AppConstants.ERR_USER_DELETED} with id $id",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
@@ -76,39 +100,37 @@ class UserServiceImpl(
             fullName = result.fullName,
             roleName = result.role?.name,
             createdAt = result.createdAt!!,
-            createdBy = result.createdBy ?: "SYSTEM"
+            createdBy = result.createdBy ?: AppConstants.SYSTEM_USER
         )
     }
 
+    @Transactional
     override fun updateUserById(req: ReqUserUpdate): ResUserById {
-        val isSelf: Boolean = httpServletRequest.getHeader("X-USER-ID")?.toInt() == req.id
-        val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
+        val authenticatedUserId = getAuthenticatedUserId()
+        val isSelf = authenticatedUserId == req.id
 
-        if (!isSelf && !isAdmin) {
+        if (!isSelf && !isAdmin()) {
             throw CustomException(
-                "You are not authorized to update this user",
+                AppConstants.ERR_UNAUTHORIZED,
                 HttpStatus.FORBIDDEN.value()
             )
         }
 
         val user = masterUserRepository.findUserActiveById(req.id).orElseThrow {
-            throw Exception("User with id ${req.id} not found")
+            CustomException(
+                "${AppConstants.ERR_USER_NOT_FOUND} with id ${req.id}",
+                HttpStatus.NOT_FOUND.value()
+            )
         }
 
         if (user.isDelete) {
             throw CustomException(
-                "User with id ${req.id} is deleted",
+                "${AppConstants.ERR_USER_DELETED} with id ${req.id}",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
 
-        val updaterId = httpServletRequest.getHeader("X-USER-ID")
-        val updater = masterUserRepository.findUserActiveById(updaterId!!.toInt()).orElseThrow {
-            throw CustomException(
-                "Updater with id $updaterId not found",
-                HttpStatus.NOT_FOUND.value()
-            )
-        }
+        val updater = getAuthenticatedUser()
 
         user.updatedBy = updater.fullName
         user.updatedAt = Timestamp(System.currentTimeMillis())
@@ -124,38 +146,30 @@ class UserServiceImpl(
             fullName = updatedUser.fullName,
             roleName = updatedUser.role?.name,
             createdAt = updatedUser.createdAt!!,
-            createdBy = updatedUser.createdBy ?: "SYSTEM"
+            createdBy = updatedUser.createdBy ?: AppConstants.SYSTEM_USER
         )
     }
 
     override fun deleteUserById(id: Int) {
-        val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
-
-        if (!isAdmin) {
-            throw CustomException(
-                "You are not authorized to delete user",
-                HttpStatus.FORBIDDEN.value()
-            )
-        }
+        requireAdmin()
 
         val user = masterUserRepository.findUserActiveById(id).orElseThrow {
             throw CustomException(
-                "User with id $id not found",
+                AppConstants.ERR_USER_NOT_FOUND + " with id $id",
                 HttpStatus.NOT_FOUND.value()
             )
         }
 
         if (user.isDelete) {
             throw CustomException(
-                "User with id $id is already deleted",
+                AppConstants.ERR_USER_ALREADY_DELETED + " with id $id",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
 
-        val adminId = httpServletRequest.getHeader("X-USER-ID")
-        val admin = masterUserRepository.findUserActiveById(adminId!!.toInt()).orElseThrow {
+        val admin = masterUserRepository.findUserActiveById(getAuthenticatedUserId()).orElseThrow {
             throw CustomException(
-                "Admin with id $adminId not found",
+                AppConstants.ERR_ADMIN_NOT_FOUND + " with id ${getAuthenticatedUserId()}",
                 HttpStatus.NOT_FOUND.value()
             )
         }
@@ -172,33 +186,25 @@ class UserServiceImpl(
     }
 
     override fun restoreUserById(id: Int) {
-        val isAdmin: Boolean = httpServletRequest.getHeader("X-USER-AUTHORITY") == "admin"
-
-        if (!isAdmin) {
-            throw CustomException(
-                "You are not authorized to restore user",
-                HttpStatus.FORBIDDEN.value()
-            )
-        }
+        requireAdmin()
 
         val user = masterUserRepository.findById(id).orElseThrow {
             throw CustomException(
-                "User with id $id not found",
+                AppConstants.ERR_USER_NOT_FOUND + " with id $id",
                 HttpStatus.NOT_FOUND.value()
             )
         }
 
         if (!user.isDelete) {
             throw CustomException(
-                "User with id $id is not deleted",
+                AppConstants.ERR_USER_NOT_DELETED + " with id $id",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
 
-        val adminId = httpServletRequest.getHeader("X-USER-ID")
-        val admin = masterUserRepository.findUserActiveById(adminId!!.toInt()).orElseThrow {
+        val admin = masterUserRepository.findUserActiveById(getAuthenticatedUserId()).orElseThrow {
             throw CustomException(
-                "Admin with id $adminId not found",
+                AppConstants.ERR_ADMIN_NOT_FOUND + " with id ${getAuthenticatedUserId()}",
                 HttpStatus.NOT_FOUND.value()
             )
         }

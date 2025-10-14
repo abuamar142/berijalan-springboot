@@ -5,6 +5,7 @@ import com.abuamar.user_management_service.domain.dto.res.BaseResponse
 import com.abuamar.user_management_service.domain.dto.res.ResUser
 import com.abuamar.user_management_service.domain.dto.res.ResUserById
 import com.abuamar.user_management_service.service.UserService
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -35,7 +36,7 @@ class UserController(
     @PutMapping("/{id}")
     fun updateUserById(
         @PathVariable id: Int,
-        @RequestBody req: ReqUserUpdate
+        @RequestBody @Valid req: ReqUserUpdate
     ): ResponseEntity<BaseResponse<ResUserById>> {
         req.id = id
 

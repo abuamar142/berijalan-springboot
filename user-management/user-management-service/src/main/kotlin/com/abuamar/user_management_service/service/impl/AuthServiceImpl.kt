@@ -1,5 +1,6 @@
 package com.abuamar.user_management_service.service.impl
 
+import com.abuamar.user_management_service.domain.constant.AppConstants
 import com.abuamar.user_management_service.domain.dto.res.ResUserById
 import com.abuamar.user_management_service.domain.entity.MasterUserEntity
 import com.abuamar.user_management_service.domain.dto.req.ReqLogin
@@ -23,14 +24,28 @@ class AuthServiceImpl(
 ): AuthService {
     override fun login(req: ReqLogin): ResLogin {
         val user = userRepository.findByUsername(req.username) ?: throw CustomException(
-            "Username or password is incorrect",
+            AppConstants.ERR_USER_NOT_FOUND,
             HttpStatus.UNAUTHORIZED.value()
         )
 
         if (!passwordEncoder.matches(req.password, user.password)) {
             throw CustomException(
-                "Username or password is incorrect",
+                AppConstants.ERR_INVALID_CREDENTIALS,
                 HttpStatus.UNAUTHORIZED.value()
+            )
+        }
+
+        if (!user.isActive) {
+            throw CustomException(
+                AppConstants.ERR_USER_INACTIVE,
+                HttpStatus.FORBIDDEN.value()
+            )
+        }
+
+        if (user.isDelete) {
+            throw CustomException(
+                AppConstants.ERR_USER_DELETED,
+                HttpStatus.FORBIDDEN.value()
             )
         }
 
@@ -43,14 +58,17 @@ class AuthServiceImpl(
         val registeredUser = userRepository.findByUsername(req.username)
         if (registeredUser != null) {
            throw CustomException(
-               "Username ${req.username} already registered",
+               "${AppConstants.ERR_USERNAME_EXISTS}: ${req.username}",
                HttpStatus.BAD_REQUEST.value()
            )
         }
 
         val role = if (req.roleId != null) {
             roleRepository.findById(req.roleId).orElseThrow {
-                throw Exception("Role with id ${req.roleId} not found")
+                CustomException(
+                    "${AppConstants.ERR_ROLE_NOT_FOUND} with id ${req.roleId}",
+                    HttpStatus.NOT_FOUND.value()
+                )
             }
         } else {
             null
@@ -65,7 +83,7 @@ class AuthServiceImpl(
             role = role,
         )
 
-        user.createdBy = "SYSTEM"
+        user.createdBy = AppConstants.SYSTEM_USER
 
         val userDb = userRepository.save(user)
 
@@ -75,8 +93,7 @@ class AuthServiceImpl(
             fullName = userDb.fullName,
             roleName = userDb.role?.name,
             createdAt = userDb.createdAt!!,
-            createdBy = userDb.createdBy ?: "SYSTEM"
+            createdBy = userDb.createdBy ?: AppConstants.SYSTEM_USER
         )
     }
-
 }

@@ -35,7 +35,7 @@ class AuthController(
 
     @PostMapping("/login")
     fun login(
-        @RequestBody req: ReqLogin
+        @RequestBody @Valid req: ReqLogin
     ): ResponseEntity<BaseResponse<ResLogin>> {
         return ResponseEntity(
             BaseResponse(
