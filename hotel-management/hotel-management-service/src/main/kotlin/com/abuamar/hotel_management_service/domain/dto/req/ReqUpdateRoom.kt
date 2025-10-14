@@ -11,8 +11,8 @@ data class ReqUpdateRoom(
     @field:Size(min = 3, max = 50, message = "Room type must be between 3 and 50 characters")
     val type: String? = null,
 
-    @field:DecimalMin(value = "0.0", message = "Price must be at least 0.0")
-    val price: Double? = null,
+    @field:Min(value = 0, message = "Price must be at least 0")
+    val price: Int? = null,
 
     @field:Min(value = 1, message = "Capacity must be at least 1")
     val capacity: Int? = null,

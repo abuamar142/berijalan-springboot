@@ -4,7 +4,7 @@ data class ResRoom(
     val id: Int,
     val roomNumber: String,
     val type: String,
-    val price: Double,
+    val price: Int,
     val capacity: Int,
     val description: String?,
     val status: String,

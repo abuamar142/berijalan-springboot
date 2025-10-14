@@ -25,8 +25,8 @@ data class MasterHotelEntity(
     @Column(name = "rating", nullable = true)
     var rating: Double? = null,
 
-    @OneToMany(mappedBy = "hotel", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val rooms: List<MasterRoomEntity> = emptyList(),
+    // @OneToMany(mappedBy = "hotel", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    // val rooms: List<MasterRoomEntity> = emptyList(),
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinTable(

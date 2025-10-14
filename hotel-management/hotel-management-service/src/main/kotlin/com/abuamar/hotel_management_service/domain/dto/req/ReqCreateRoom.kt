@@ -12,8 +12,8 @@ data class ReqCreateRoom(
     val type: String,
 
     @field:NotNull(message = "Price cannot be null")
-    @field:DecimalMin(value = "0.0", message = "Price must be at least 0.0")
-    val price: Double,
+    @field:Min(value = 0, message = "Price must be at least 0")
+    val price: Int,
 
     @field:NotNull(message = "Capacity cannot be null")
     @field:Min(value = 1, message = "Capacity must be at least 1")
