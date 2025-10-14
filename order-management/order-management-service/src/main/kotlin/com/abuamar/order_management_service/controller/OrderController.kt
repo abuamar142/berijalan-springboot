@@ -105,4 +105,20 @@ class OrderController(
             )
         )
     }
+
+    @GetMapping("/check-availability")
+    fun checkRoomAvailability(
+        @RequestParam roomId: Int,
+        @RequestParam checkInDate: String,
+        @RequestParam checkOutDate: String
+    ): ResponseEntity<BaseResponse<Boolean>> {
+        val isReserved = orderService.checkRoomAvailability(roomId, checkInDate, checkOutDate)
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = "Room availability checked",
+                data = isReserved
+            )
+        )
+    }
 }

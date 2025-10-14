@@ -8,6 +8,7 @@ interface RoomService {
     fun getAllRooms(): List<ResRoom>
     fun getRoomById(id: Int): ResRoom
     fun getAvailableRooms(): List<ResRoom>
+    fun getAvailableRoomsByDate(checkInDate: String, checkOutDate: String): List<ResRoom>
     fun createRoom(req: ReqCreateRoom): ResRoom
     fun updateRoom(req: ReqUpdateRoom): ResRoom
     fun deleteRoom(id: Int)

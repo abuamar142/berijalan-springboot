@@ -12,4 +12,5 @@ interface OrderService {
     fun updateOrder(id: Int, request: ReqUpdateOrder): ResOrder
     fun deleteOrder(id: Int)
     fun restoreOrder(id: Int): ResOrder
+    fun checkRoomAvailability(roomId: Int, checkInDate: String, checkOutDate: String): Boolean
 }

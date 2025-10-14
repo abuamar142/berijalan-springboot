@@ -48,4 +48,16 @@ interface MasterRoomRepository: JpaRepository<MasterRoomEntity, Int> {
         nativeQuery = true
     )
     fun findAvailableRooms(): List<MasterRoomEntity>
+
+    @Query(
+        """
+        SELECT * FROM mst_room
+        WHERE is_delete = false
+        AND is_active = true
+        AND status = :status
+        ORDER BY room_number
+        """,
+        nativeQuery = true
+    )
+    fun findByStatusAndIsDeleteFalse(status: String): List<MasterRoomEntity>
 }

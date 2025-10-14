@@ -11,6 +11,7 @@ import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterAmenityRepository
 import com.abuamar.hotel_management_service.repository.MasterRoomRepository
 import com.abuamar.hotel_management_service.repository.RoomAmenityRepository
+import com.abuamar.hotel_management_service.rest.OrderClient
 import com.abuamar.hotel_management_service.service.RoomService
 import com.abuamar.hotel_management_service.domain.entity.RoomAmenityEntity
 import jakarta.servlet.http.HttpServletRequest
@@ -24,6 +25,7 @@ class RoomServiceImpl(
     private val roomRepository: MasterRoomRepository,
     private val amenityRepository: MasterAmenityRepository,
     private val roomAmenityRepository: RoomAmenityRepository,
+    private val orderClient: OrderClient,
     private val httpServletRequest: HttpServletRequest
 ): RoomService {
     
@@ -79,7 +81,21 @@ class RoomServiceImpl(
             )
         }
 
-        return rooms.map { mapToResRoom(it) }
+        // Filter to show only AVAILABLE and MAINTENANCE rooms
+        val filteredRooms = rooms.filter { room ->
+            room.status == RoomStatus.AVAILABLE || room.status == RoomStatus.MAINTENANCE
+        }
+
+        if (filteredRooms.isEmpty()) {
+            throw CustomException(
+                AppConstants.ERR_NO_ROOMS_FOUND,
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+
+        return filteredRooms
+            .sortedBy { it.roomNumber }
+            .map { mapToResRoom(it) }
     }
 
     override fun getRoomById(id: Int): ResRoom {
@@ -104,6 +120,47 @@ class RoomServiceImpl(
         }
 
         return rooms.map { mapToResRoom(it) }
+    }
+
+    override fun getAvailableRoomsByDate(checkInDate: String, checkOutDate: String): List<ResRoom> {
+        // Get all rooms with status AVAILABLE only (exclude MAINTENANCE)
+        val availableRooms = roomRepository.findByStatusAndIsDeleteFalse("AVAILABLE")
+        
+        if (availableRooms.isEmpty()) {
+            throw CustomException(
+                "No available rooms found",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+
+        // Filter rooms by checking with OrderClient
+        val availableRoomsByDate = availableRooms.filter { room ->
+            try {
+                val isReserved = orderClient.checkRoomAvailability(
+                    room.id,
+                    checkInDate,
+                    checkOutDate
+                ).body?.data ?: false
+                
+                // Keep only if NOT reserved
+                !isReserved
+            } catch (e: Exception) {
+                // If feign call fails, assume room is available
+                true
+            }
+        }
+
+        if (availableRoomsByDate.isEmpty()) {
+            throw CustomException(
+                "No rooms available for the selected dates",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+
+        // Sort by room number
+        return availableRoomsByDate
+            .sortedBy { it.roomNumber }
+            .map { mapToResRoom(it) }
     }
     
     @Transactional

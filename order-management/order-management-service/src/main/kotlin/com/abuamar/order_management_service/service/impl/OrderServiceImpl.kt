@@ -358,4 +358,25 @@ class OrderServiceImpl(
         val restoredOrder = orderRepository.save(order)
         return mapToResOrder(restoredOrder)
     }
+
+    override fun checkRoomAvailability(roomId: Int, checkInDate: String, checkOutDate: String): Boolean {
+        // Parse dates
+        val requestedCheckIn = LocalDate.parse(checkInDate)
+        val requestedCheckOut = LocalDate.parse(checkOutDate)
+
+        // Find conflicting orders with status PENDING, CONFIRMED, or CHECKED_IN
+        val conflicts = orderRepository.findConflictingOrders(
+            roomId,
+            Date.valueOf(requestedCheckIn),
+            Date.valueOf(requestedCheckOut)
+        )
+
+        // Filter only orders with reservation status
+        val reservedOrders = conflicts.filter { order ->
+            order.status.name in listOf("PENDING", "CONFIRMED", "CHECKED_IN")
+        }
+
+        // Return true if room is reserved (has conflicts), false if available
+        return reservedOrders.isNotEmpty()
+    }
 }

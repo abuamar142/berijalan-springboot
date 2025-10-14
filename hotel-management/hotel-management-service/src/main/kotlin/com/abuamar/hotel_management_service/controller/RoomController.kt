@@ -41,7 +41,22 @@ class RoomController(
     }
 
     @GetMapping("/available")
-    fun getAvailableRooms(): ResponseEntity<BaseResponse<List<ResRoom>>> {
+    fun getAvailableRooms(
+        @RequestParam(required = false) checkInDate: String?,
+        @RequestParam(required = false) checkOutDate: String?
+    ): ResponseEntity<BaseResponse<List<ResRoom>>> {
+        // If dates provided, check availability by date
+        if (checkInDate != null && checkOutDate != null) {
+            return ResponseEntity.ok(
+                BaseResponse(
+                    success = true,
+                    message = "Success get available rooms for dates",
+                    data = roomService.getAvailableRoomsByDate(checkInDate, checkOutDate),
+                )
+            )
+        }
+        
+        // Otherwise return all available rooms (status = AVAILABLE)
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
