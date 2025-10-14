@@ -54,7 +54,8 @@ class AmenityServiceImpl(
             ResAmenity(
                 id = amenity.id,
                 name = amenity.name,
-                description = amenity.description ?: "",
+                description = amenity.description,
+                icon = amenity.icon
             )
         }
     }
@@ -70,7 +71,8 @@ class AmenityServiceImpl(
         return ResAmenity(
             id = amenity.id,
             name = amenity.name,
-            description = amenity.description ?: "",
+            description = amenity.description,
+            icon = amenity.icon
         )
     }
     
@@ -92,7 +94,8 @@ class AmenityServiceImpl(
         
         val amenity = MasterAmenityEntity(
             name = req.name,
-            description = req.description
+            description = req.description,
+            icon = req.icon
         )
         
         amenity.createdBy = userId
@@ -108,7 +111,8 @@ class AmenityServiceImpl(
         return ResAmenity(
             id = savedAmenity.id,
             name = savedAmenity.name,
-            description = savedAmenity.description ?: ""
+            description = savedAmenity.description,
+            icon = savedAmenity.icon
         )
     }
     
@@ -143,6 +147,10 @@ class AmenityServiceImpl(
             amenity.description = req.description
         }
         
+        if (req.icon != null) {
+            amenity.icon = req.icon
+        }
+        
         amenity.updatedAt = Timestamp(System.currentTimeMillis())
         amenity.updatedBy = userId
         
@@ -151,7 +159,8 @@ class AmenityServiceImpl(
         return ResAmenity(
             id = updatedAmenity.id,
             name = updatedAmenity.name,
-            description = updatedAmenity.description ?: ""
+            description = updatedAmenity.description,
+            icon = updatedAmenity.icon
         )
     }
     
@@ -207,7 +216,8 @@ class AmenityServiceImpl(
         return ResAmenity(
             id = restoredAmenity.id,
             name = restoredAmenity.name,
-            description = restoredAmenity.description ?: ""
+            description = restoredAmenity.description,
+            icon = restoredAmenity.icon
         )
     }
 }

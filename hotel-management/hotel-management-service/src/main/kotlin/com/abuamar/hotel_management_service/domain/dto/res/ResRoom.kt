@@ -5,12 +5,8 @@ data class ResRoom(
     val roomNumber: String,
     val type: String,
     val price: Double,
+    val capacity: Int,
+    val description: String?,
     val status: String,
-    val hotel: ResHotelSimple,
     val amenities: List<ResAmenity>
-)
-
-data class ResHotelSimple(
-    val id: Int,
-    val name: String
 )

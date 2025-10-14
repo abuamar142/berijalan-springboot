@@ -31,22 +31,10 @@ interface MasterRoomRepository: JpaRepository<MasterRoomEntity, Int> {
         """
         SELECT * FROM mst_room
         WHERE LOWER(room_number) = LOWER(:roomNumber)
-        AND hotel_id = :hotelId
         AND is_delete = false
         AND is_active = true
         """,
         nativeQuery = true
     )
-    fun findByRoomNumberAndHotelId(roomNumber: String, hotelId: Int): Optional<MasterRoomEntity>
-    
-    @Query(
-        """
-        SELECT * FROM mst_room
-        WHERE hotel_id = :hotelId
-        AND is_delete = false
-        AND is_active = true
-        """,
-        nativeQuery = true
-    )
-    fun findByHotelId(hotelId: Int): List<MasterRoomEntity>
+    fun findByRoomNumber(roomNumber: String): Optional<MasterRoomEntity>
 }

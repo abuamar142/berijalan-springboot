@@ -40,19 +40,6 @@ class RoomController(
         )
     }
     
-    @GetMapping("/hotel/{hotelId}")
-    fun getRoomsByHotelId(
-        @PathVariable hotelId: Int
-    ): ResponseEntity<BaseResponse<List<ResRoom>>> {
-        return ResponseEntity.ok(
-            BaseResponse(
-                success = true,
-                message = "Success get rooms for hotel id $hotelId",
-                data = roomService.getRoomsByHotelId(hotelId),
-            )
-        )
-    }
-    
     @PostMapping
     fun createRoom(
         @RequestBody @Valid req: ReqCreateRoom

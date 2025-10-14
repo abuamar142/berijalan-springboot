@@ -4,7 +4,6 @@ import com.abuamar.hotel_management_service.domain.constant.AppConstants
 import com.abuamar.hotel_management_service.domain.dto.req.ReqCreateRoom
 import com.abuamar.hotel_management_service.domain.dto.req.ReqUpdateRoom
 import com.abuamar.hotel_management_service.domain.dto.res.ResAmenity
-import com.abuamar.hotel_management_service.domain.dto.res.ResHotelSimple
 import com.abuamar.hotel_management_service.domain.dto.res.ResRoom
 import com.abuamar.hotel_management_service.domain.entitiy.MasterRoomEntity
 import com.abuamar.hotel_management_service.domain.enum.RoomStatus
@@ -22,7 +21,6 @@ import java.sql.Timestamp
 @Service
 class RoomServiceImpl(
     private val roomRepository: MasterRoomRepository,
-    private val hotelRepository: MasterHotelRepository,
     private val amenityRepository: MasterAmenityRepository,
     private val httpServletRequest: HttpServletRequest
 ): RoomService {
@@ -55,16 +53,15 @@ class RoomServiceImpl(
             roomNumber = room.roomNumber,
             type = room.type,
             price = room.price,
+            capacity = room.capacity,
+            description = room.description,
             status = room.status.name,
-            hotel = ResHotelSimple(
-                id = room.hotel.id,
-                name = room.hotel.name
-            ),
             amenities = room.amenities.map { amenity ->
                 ResAmenity(
                     id = amenity.id,
                     name = amenity.name,
-                    description = amenity.description ?: ""
+                    description = amenity.description,
+                    icon = amenity.icon
                 )
             }
         )
@@ -94,45 +91,16 @@ class RoomServiceImpl(
         return mapToResRoom(room)
     }
     
-    override fun getRoomsByHotelId(hotelId: Int): List<ResRoom> {
-        // Validate hotel exists
-        hotelRepository.findHotelActiveById(hotelId).orElseThrow {
-            throw CustomException(
-                "${AppConstants.ERR_HOTEL_NOT_FOUND} with id $hotelId",
-                HttpStatus.NOT_FOUND.value()
-            )
-        }
-        
-        val rooms = roomRepository.findByHotelId(hotelId)
-        
-        if (rooms.isEmpty()) {
-            throw CustomException(
-                "${AppConstants.ERR_NO_ROOMS_FOUND} for hotel id $hotelId",
-                HttpStatus.NOT_FOUND.value()
-            )
-        }
-
-        return rooms.map { mapToResRoom(it) }
-    }
-    
     @Transactional
     override fun createRoom(req: ReqCreateRoom): ResRoom {
         requireAdmin()
         
-        // Validate hotel exists
-        val hotel = hotelRepository.findHotelActiveById(req.hotelId).orElseThrow {
-            throw CustomException(
-                "${AppConstants.ERR_HOTEL_NOT_FOUND} with id ${req.hotelId}",
-                HttpStatus.BAD_REQUEST.value()
-            )
-        }
-        
-        // Check if room number already exists in the same hotel
-        val existingRoom = roomRepository.findByRoomNumberAndHotelId(req.roomNumber, req.hotelId).orElse(null)
+        // Check if room number already exists
+        val existingRoom = roomRepository.findByRoomNumber(req.roomNumber).orElse(null)
         
         if (existingRoom != null) {
             throw CustomException(
-                "${AppConstants.ERR_ROOM_ALREADY_EXISTS} in hotel ${hotel.name}",
+                AppConstants.ERR_ROOM_ALREADY_EXISTS,
                 HttpStatus.BAD_REQUEST.value()
             )
         }
@@ -143,8 +111,9 @@ class RoomServiceImpl(
             roomNumber = req.roomNumber,
             type = req.type,
             price = req.price,
-            status = RoomStatus.valueOf(req.status ?: "AVAILABLE"),
-            hotel = hotel
+            capacity = req.capacity,
+            description = req.description,
+            status = RoomStatus.valueOf(req.status ?: "AVAILABLE")
         )
         
         // Handle amenities if provided
@@ -185,24 +154,13 @@ class RoomServiceImpl(
         
         val userId = getAuthenticatedUserId()
         
-        // Update hotel if provided
-        if (req.hotelId != null) {
-            val hotel = hotelRepository.findHotelActiveById(req.hotelId).orElseThrow {
-                throw CustomException(
-                    "${AppConstants.ERR_HOTEL_NOT_FOUND} with id ${req.hotelId}",
-                    HttpStatus.BAD_REQUEST.value()
-                )
-            }
-            room.hotel = hotel
-        }
-        
-        // Check if new room number already exists in the hotel (excluding current room)
+        // Check if new room number already exists (excluding current room)
         if (req.roomNumber != null) {
-            val existingRoom = roomRepository.findByRoomNumberAndHotelId(req.roomNumber, room.hotel.id).orElse(null)
+            val existingRoom = roomRepository.findByRoomNumber(req.roomNumber).orElse(null)
             
             if (existingRoom != null && existingRoom.id != req.id) {
                 throw CustomException(
-                    "${AppConstants.ERR_ROOM_ALREADY_EXISTS} in hotel ${room.hotel.name}",
+                    AppConstants.ERR_ROOM_ALREADY_EXISTS,
                     HttpStatus.BAD_REQUEST.value()
                 )
             }
@@ -216,6 +174,14 @@ class RoomServiceImpl(
         
         if (req.price != null) {
             room.price = req.price
+        }
+        
+        if (req.capacity != null) {
+            room.capacity = req.capacity
+        }
+        
+        if (req.description != null) {
+            room.description = req.description
         }
         
         if (req.status != null) {

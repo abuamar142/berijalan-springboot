@@ -9,5 +9,8 @@ data class ReqUpdateAmenity(
     val name: String? = null,
 
     @field:Size(max = 500, message = "Description cannot exceed 500 characters")
-    val description: String? = null
+    val description: String? = null,
+
+    @field:Size(max = 50, message = "Icon cannot exceed 50 characters")
+    val icon: String? = null
 )

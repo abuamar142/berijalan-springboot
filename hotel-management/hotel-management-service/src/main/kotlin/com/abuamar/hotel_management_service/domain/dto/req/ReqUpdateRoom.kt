@@ -14,12 +14,15 @@ data class ReqUpdateRoom(
     @field:DecimalMin(value = "0.0", message = "Price must be at least 0.0")
     val price: Double? = null,
 
-    @field:Min(value = 1, message = "Hotel ID must be at least 1")
-    val hotelId: Int? = null,
+    @field:Min(value = 1, message = "Capacity must be at least 1")
+    val capacity: Int? = null,
+
+    @field:Size(max = 1000, message = "Description must not exceed 1000 characters")
+    val description: String? = null,
 
     @field:Pattern(
-        regexp = "^(AVAILABLE|OCCUPIED|MAINTENANCE|RESERVED)$",
-        message = "Status must be AVAILABLE, OCCUPIED, MAINTENANCE, or RESERVED"
+        regexp = "^(AVAILABLE|MAINTENANCE|RESERVED)$",
+        message = "Status must be AVAILABLE, MAINTENANCE, or RESERVED"
     )
     val status: String? = null,
 
