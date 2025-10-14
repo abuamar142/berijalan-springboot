@@ -25,7 +25,9 @@ object AppConstants {
     
     // Error Messages - Facility
     const val ERR_FACILITY_NOT_FOUND = "Facility not found"
+    const val ERR_FACILITY_ALREADY_ACTIVE = "Facility is already active"
     const val ERR_NO_FACILITIES_FOUND = "No facilities found"
+    const val ERR_FACILITY_ALREADY_EXISTS = "Facility with this name already exists"
     
     // Error Messages - Hotel
     const val ERR_HOTEL_NOT_FOUND = "Hotel not found"
