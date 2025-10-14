@@ -2,6 +2,51 @@ package com.abuamar.hotel_management_service.repository
 
 import com.abuamar.hotel_management_service.domain.entitiy.MasterRoomEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import java.util.Optional
 
 interface MasterRoomRepository: JpaRepository<MasterRoomEntity, Int> {
+    @Query(
+        """
+        SELECT * FROM mst_room
+        WHERE is_delete = false
+        AND is_active = true
+        """,
+        nativeQuery = true
+    )
+    override fun findAll(): List<MasterRoomEntity>
+    
+    @Query(
+        """
+        SELECT * FROM mst_room
+        WHERE id = :id
+        AND is_delete = false
+        AND is_active = true
+        """,
+        nativeQuery = true
+    )
+    fun findRoomActiveById(id: Int): Optional<MasterRoomEntity>
+
+    @Query(
+        """
+        SELECT * FROM mst_room
+        WHERE LOWER(room_number) = LOWER(:roomNumber)
+        AND hotel_id = :hotelId
+        AND is_delete = false
+        AND is_active = true
+        """,
+        nativeQuery = true
+    )
+    fun findByRoomNumberAndHotelId(roomNumber: String, hotelId: Int): Optional<MasterRoomEntity>
+    
+    @Query(
+        """
+        SELECT * FROM mst_room
+        WHERE hotel_id = :hotelId
+        AND is_delete = false
+        AND is_active = true
+        """,
+        nativeQuery = true
+    )
+    fun findByHotelId(hotelId: Int): List<MasterRoomEntity>
 }

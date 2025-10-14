@@ -37,7 +37,9 @@ object AppConstants {
     
     // Error Messages - Room
     const val ERR_ROOM_NOT_FOUND = "Room not found"
+    const val ERR_ROOM_ALREADY_ACTIVE = "Room is already active"
     const val ERR_NO_ROOMS_FOUND = "No rooms found"
+    const val ERR_ROOM_ALREADY_EXISTS = "Room with this number already exists"
     
     // Error Messages - Product
     const val ERR_PRODUCT_NOT_FOUND = "Product not found"
