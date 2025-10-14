@@ -30,11 +30,9 @@ data class MasterRoomEntity(
     @Column(name = "status", nullable = false, length = 20)
     var status: RoomStatus = RoomStatus.AVAILABLE,
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
-    @JoinTable(
-        name = "trn_room_amenity",
-        joinColumns = [JoinColumn(name = "room_id")],
-        inverseJoinColumns = [JoinColumn(name = "amenity_id")]
-    )
-    var amenities: MutableSet<MasterAmenityEntity> = HashSet()
-) : BaseEntity()
+    @OneToMany(mappedBy = "room", fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
+    var roomAmenities: MutableSet<RoomAmenityEntity> = HashSet()
+) : BaseEntity() {
+    val amenities: Set<MasterAmenityEntity>
+        get() = roomAmenities.map { it.amenity }.toSet()
+}

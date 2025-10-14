@@ -9,9 +9,10 @@ import com.abuamar.hotel_management_service.domain.entitiy.MasterRoomEntity
 import com.abuamar.hotel_management_service.domain.enum.RoomStatus
 import com.abuamar.hotel_management_service.exception.CustomException
 import com.abuamar.hotel_management_service.repository.MasterAmenityRepository
-import com.abuamar.hotel_management_service.repository.MasterHotelRepository
 import com.abuamar.hotel_management_service.repository.MasterRoomRepository
+import com.abuamar.hotel_management_service.repository.RoomAmenityRepository
 import com.abuamar.hotel_management_service.service.RoomService
+import com.abuamar.hotel_management_service.domain.entitiy.RoomAmenityEntity
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,6 +23,7 @@ import java.sql.Timestamp
 class RoomServiceImpl(
     private val roomRepository: MasterRoomRepository,
     private val amenityRepository: MasterAmenityRepository,
+    private val roomAmenityRepository: RoomAmenityRepository,
     private val httpServletRequest: HttpServletRequest
 ): RoomService {
     
@@ -116,6 +118,14 @@ class RoomServiceImpl(
             status = RoomStatus.valueOf(req.status ?: "AVAILABLE")
         )
         
+        room.createdBy = userId
+        room.updatedAt = Timestamp(System.currentTimeMillis())
+        room.updatedBy = userId
+        room.isActive = true
+        room.isDelete = false
+        
+        val savedRoom = roomRepository.save(room)
+        
         // Handle amenities if provided
         if (!req.amenityIds.isNullOrEmpty()) {
             val amenities = amenityRepository.findAllById(req.amenityIds)
@@ -127,18 +137,28 @@ class RoomServiceImpl(
                 )
             }
             
-            room.amenities = amenities.toMutableSet()
+            // Create junction table entries with created_by
+            val roomAmenities = amenities.map { amenity ->
+                RoomAmenityEntity(
+                    room = savedRoom,
+                    amenity = amenity,
+                    createdAt = Timestamp(System.currentTimeMillis()),
+                    createdBy = userId
+                )
+            }
+            
+            roomAmenityRepository.saveAll(roomAmenities)
         }
         
-        room.createdBy = userId
-        room.updatedAt = Timestamp(System.currentTimeMillis())
-        room.updatedBy = userId
-        room.isActive = true
-        room.isDelete = false
+        // Refresh room data to load amenities
+        val roomWithAmenities = roomRepository.findRoomActiveById(savedRoom.id).orElseThrow {
+            CustomException(
+                "${AppConstants.ERR_ROOM_NOT_FOUND} with id ${savedRoom.id}",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
         
-        val savedRoom = roomRepository.save(room)
-        
-        return mapToResRoom(savedRoom)
+        return mapToResRoom(roomWithAmenities)
     }
     
     @Transactional
@@ -188,11 +208,16 @@ class RoomServiceImpl(
             room.status = RoomStatus.valueOf(req.status)
         }
         
+        room.updatedAt = Timestamp(System.currentTimeMillis())
+        room.updatedBy = userId
+        
+        val updatedRoom = roomRepository.save(room)
+        
         // Update amenities if provided
         if (req.amenityIds != null) {
-            if (req.amenityIds.isEmpty()) {
-                room.amenities.clear()
-            } else {
+            roomAmenityRepository.deleteByRoomId(room.id)
+            
+            if (req.amenityIds.isNotEmpty()) {
                 val amenities = amenityRepository.findAllById(req.amenityIds)
                 
                 if (amenities.size != req.amenityIds.size) {
@@ -202,17 +227,28 @@ class RoomServiceImpl(
                     )
                 }
                 
-                room.amenities.clear()
-                room.amenities.addAll(amenities)
+                val roomAmenities = amenities.map { amenity ->
+                    RoomAmenityEntity(
+                        room = updatedRoom,
+                        amenity = amenity,
+                        createdAt = Timestamp(System.currentTimeMillis()),
+                        createdBy = userId
+                    )
+                }
+                
+                roomAmenityRepository.saveAll(roomAmenities)
             }
         }
         
-        room.updatedAt = Timestamp(System.currentTimeMillis())
-        room.updatedBy = userId
+        // Refresh room data to load amenities
+        val roomWithAmenities = roomRepository.findRoomActiveById(updatedRoom.id).orElseThrow {
+            CustomException(
+                "${AppConstants.ERR_ROOM_NOT_FOUND} with id ${updatedRoom.id}",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
         
-        val updatedRoom = roomRepository.save(room)
-        
-        return mapToResRoom(updatedRoom)
+        return mapToResRoom(roomWithAmenities)
     }
     
     @Transactional

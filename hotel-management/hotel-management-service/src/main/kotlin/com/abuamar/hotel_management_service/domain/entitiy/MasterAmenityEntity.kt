@@ -19,6 +19,9 @@ data class MasterAmenityEntity(
     @Column(name = "icon", length = 50)
     var icon: String? = null,
 
-    @ManyToMany(mappedBy = "amenities")
-    val rooms: Set<MasterRoomEntity> = HashSet()
-) : BaseEntity()
+    @OneToMany(mappedBy = "amenity", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+    val roomAmenities: MutableSet<RoomAmenityEntity> = HashSet()
+) : BaseEntity() {
+    val rooms: Set<MasterRoomEntity>
+        get() = roomAmenities.map { it.room }.toSet()
+}
