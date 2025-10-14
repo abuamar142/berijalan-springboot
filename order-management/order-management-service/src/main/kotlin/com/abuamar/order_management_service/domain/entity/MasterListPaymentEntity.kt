@@ -1,51 +1,44 @@
 package com.abuamar.order_management_service.domain.entity
 
+import com.abuamar.order_management_service.domain.enum.PaymentMethod
+import com.abuamar.order_management_service.domain.enum.TransactionPaymentStatus
 import jakarta.persistence.*
-import java.math.BigDecimal
 import java.sql.Timestamp
 
 @Entity
-@Table(name = "mst_list_payment")
+@Table(name = "trn_list_payment")
 data class MasterListPaymentEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", insertable = false, updatable = false)
     var id: Int = 0,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    val order: MasterOrderEntity,
+    @Column(name = "order_id", nullable = false)
+    var orderId: Int,
 
-    @Column(name = "payment_method", nullable = false)
-    val paymentMethod: String, // CREDIT_CARD, DEBIT_CARD, CASH, BANK_TRANSFER, E_WALLET
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 50)
+    var paymentMethod: PaymentMethod,
 
-    @Column(name = "payment_amount", nullable = false, precision = 19, scale = 2)
-    val paymentAmount: BigDecimal,
+    @Column(name = "payment_amount", nullable = false)
+    var paymentAmount: Int,
 
     @Column(name = "payment_date", nullable = false)
-    val paymentDate: Timestamp,
+    var paymentDate: Timestamp,
 
-    @Column(name = "transaction_id", nullable = true)
-    val transactionId: String? = null,
+    @Column(name = "transaction_id", nullable = true, length = 100, unique = true)
+    var transactionId: String? = null,
 
-    @Column(name = "payment_reference", nullable = true)
-    val paymentReference: String? = null,
+    @Column(name = "payment_reference", nullable = true, length = 100)
+    var paymentReference: String? = null,
 
-    @Column(name = "payment_status", nullable = false)
-    val paymentStatus: String = "PENDING", // PENDING, SUCCESS, FAILED, CANCELLED
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false, length = 20)
+    var paymentStatus: TransactionPaymentStatus = TransactionPaymentStatus.PENDING,
 
-    @Column(name = "payment_gateway", nullable = true)
-    val paymentGateway: String? = null, // MIDTRANS, XENDIT, GOPAY, OVO, etc.
+    @Column(name = "payment_gateway", nullable = true, length = 50)
+    var paymentGateway: String? = null,
 
     @Column(name = "notes", columnDefinition = "TEXT")
-    val notes: String? = null,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
-
-    @Column(name = "updated_at", nullable = false)
-    val updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
-
-    @Column(name = "deleted_at", nullable = true)
-    val deletedAt: Timestamp? = null,
-)
+    var notes: String? = null
+) : BaseEntity()
