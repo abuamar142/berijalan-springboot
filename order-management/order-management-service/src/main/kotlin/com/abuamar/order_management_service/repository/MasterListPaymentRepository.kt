@@ -50,6 +50,8 @@ interface MasterListPaymentRepository : JpaRepository<MasterListPaymentEntity, I
     )
     fun findByTransactionId(@Param("transactionId") transactionId: String): MasterListPaymentEntity?
 
+    // Get total amount of SUCCESS payments only (approved by admin)
+    // Used to calculate order payment status and remaining amount
     @Query(
         """
         SELECT COALESCE(SUM(payment_amount), 0) FROM trn_list_payment 
@@ -59,5 +61,5 @@ interface MasterListPaymentRepository : JpaRepository<MasterListPaymentEntity, I
         """,
         nativeQuery = true
     )
-    fun getTotalPaidAmount(@Param("orderId") orderId: Int): Int
+    fun getTotalSuccessPayments(@Param("orderId") orderId: Int): Int
 }

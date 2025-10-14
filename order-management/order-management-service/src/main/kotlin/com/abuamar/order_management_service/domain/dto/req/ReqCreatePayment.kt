@@ -16,8 +16,7 @@ data class ReqCreatePayment(
     @field:Positive(message = "Payment amount must be positive")
     val paymentAmount: Int,
 
-    @field:NotNull(message = "Payment date is required")
-    val paymentDate: Timestamp,
+    val paymentDate: Timestamp? = null,  // Optional - defaults to current timestamp
 
     @field:Size(max = 100, message = "Transaction ID cannot exceed 100 characters")
     val transactionId: String? = null,
@@ -28,6 +27,5 @@ data class ReqCreatePayment(
     @field:Size(max = 50, message = "Payment gateway cannot exceed 50 characters")
     val paymentGateway: String? = null,
 
-    @field:Size(max = 1000, message = "Notes cannot exceed 1000 characters")
-    val notes: String? = null
+    val notes: String? = null  // Optional - no max length restriction
 )

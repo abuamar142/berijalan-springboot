@@ -4,6 +4,7 @@ import com.abuamar.order_management_service.domain.dto.req.ReqCreatePayment
 import com.abuamar.order_management_service.domain.dto.req.ReqUpdatePayment
 import com.abuamar.order_management_service.domain.dto.res.ResPayment
 import com.abuamar.order_management_service.domain.entity.MasterListPaymentEntity
+import com.abuamar.order_management_service.domain.enum.PaymentStatus
 import com.abuamar.order_management_service.domain.enum.TransactionPaymentStatus
 import com.abuamar.order_management_service.exception.CustomException
 import com.abuamar.order_management_service.repository.MasterListPaymentRepository
@@ -22,7 +23,6 @@ class PaymentServiceImpl(
     private val orderRepository: MasterOrderRepository,
     private val httpServletRequest: HttpServletRequest
 ) : PaymentService {
-
     private fun getAuthenticatedUserId(): String {
         return httpServletRequest.getHeader(AppConstants.HEADER_USER_ID)
             ?: throw CustomException(
@@ -62,8 +62,8 @@ class PaymentServiceImpl(
             notes = payment.notes,
             createdAt = payment.createdAt!!,
             updatedAt = payment.updatedAt!!,
-            createdBy = payment.createdBy.toString(),
-            updatedBy = payment.updatedBy.toString()
+            createdBy = payment.createdBy ?: AppConstants.SYSTEM_USER,
+            updatedBy = payment.updatedBy ?: AppConstants.SYSTEM_USER
         )
     }
 
@@ -123,23 +123,25 @@ class PaymentServiceImpl(
             )
         }
 
-        // Validate payment amount doesn't exceed remaining amount
-        val totalPaid = paymentRepository.getTotalPaidAmount(request.orderId)
-        val remaining = order.totalAmount - totalPaid
+        // Calculate remaining based on SUCCESS payments only
+        val totalSuccessPaid = paymentRepository.getTotalSuccessPayments(request.orderId)
+        val remaining = order.totalAmount - totalSuccessPaid
 
+        // Validate payment amount doesn't exceed remaining
         if (request.paymentAmount > remaining) {
             throw CustomException(
-                "Payment amount (${request.paymentAmount}) exceeds remaining amount ($remaining)",
+                "Payment amount (${request.paymentAmount}) exceeds remaining amount ($remaining). " +
+                "Total: ${order.totalAmount}, Paid (SUCCESS): $totalSuccessPaid",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
 
-        // Check for duplicate transaction ID
-        if (request.transactionId != null) {
-            val existing = paymentRepository.findByTransactionId(request.transactionId)
+        // Check for duplicate payment reference
+        if (request.paymentReference != null) {
+            val existing = paymentRepository.findByTransactionId(request.paymentReference)
             if (existing != null) {
                 throw CustomException(
-                    "Payment with transaction ID ${request.transactionId} already exists",
+                    "Payment with reference ${request.paymentReference} already exists",
                     HttpStatus.BAD_REQUEST.value()
                 )
             }
@@ -150,26 +152,25 @@ class PaymentServiceImpl(
             orderId = request.orderId,
             paymentMethod = request.paymentMethod,
             paymentAmount = request.paymentAmount,
-            paymentDate = request.paymentDate,
+            paymentDate = request.paymentDate ?: Timestamp(System.currentTimeMillis()), // Default to now
             transactionId = request.transactionId,
             paymentReference = request.paymentReference,
+            paymentStatus = TransactionPaymentStatus.PENDING, // Always PENDING on create
             paymentGateway = request.paymentGateway,
             notes = request.notes
         )
 
-        payment.createdBy = getAuthenticatedUserId()
-        payment.updatedBy = getAuthenticatedUserId()
-
+        payment.createdBy = userId.toString()
+        payment.updatedBy = userId.toString()
         payment.createdAt = Timestamp(System.currentTimeMillis())
         payment.updatedAt = Timestamp(System.currentTimeMillis())
-
         payment.isActive = true
         payment.isDelete = false
 
         val savedPayment = paymentRepository.save(payment)
 
-        // Update order payment status if fully paid
-        updateOrderPaymentStatus(request.orderId)
+        // Don't update order payment status yet (payment is PENDING)
+        // Admin must approve (set to SUCCESS) before it counts
 
         return mapToResPayment(savedPayment)
     }
@@ -184,9 +185,26 @@ class PaymentServiceImpl(
                 HttpStatus.NOT_FOUND.value()
             )
 
+        // Prevent amount update if payment is already SUCCESS
+        if (request.paymentAmount != null && payment.paymentStatus == TransactionPaymentStatus.SUCCESS) {
+            throw CustomException(
+                "Cannot update payment amount for payments with SUCCESS status",
+                HttpStatus.BAD_REQUEST.value()
+            )
+        }
+
         // Update fields
-        request.paymentAmount?.let { 
-            // Validate new amount
+        request.paymentMethod?.let { payment.paymentMethod = it }
+        request.paymentDate?.let { payment.paymentDate = it }
+        request.paymentReference?.let { payment.paymentReference = it }
+        request.paymentGateway?.let { payment.paymentGateway = it }
+        request.notes?.let { payment.notes = it }
+        
+        // Update payment status (admin can change PENDING → SUCCESS/FAILED)
+        request.paymentStatus?.let { payment.paymentStatus = it }
+
+        // Update amount if allowed
+        if (request.paymentAmount != null) {
             val order = orderRepository.findActiveById(payment.orderId).orElseThrow {
                 CustomException(
                     "Order not found with id ${payment.orderId}",
@@ -194,45 +212,30 @@ class PaymentServiceImpl(
                 )
             }
 
-            val totalPaid = paymentRepository.getTotalPaidAmount(payment.orderId) - payment.paymentAmount
-            val remaining = order.totalAmount - totalPaid
+            // Calculate remaining (exclude current payment if SUCCESS, only count other SUCCESS payments)
+            val totalSuccessPaid = paymentRepository.getTotalSuccessPayments(payment.orderId)
+            val currentSuccessAmount = if (payment.paymentStatus == TransactionPaymentStatus.SUCCESS) payment.paymentAmount else 0
+            val remaining = order.totalAmount - (totalSuccessPaid - currentSuccessAmount)
 
-            if (it > remaining) {
+            if (request.paymentAmount > remaining) {
                 throw CustomException(
-                    "Payment amount ($it) exceeds remaining amount ($remaining)",
+                    "Payment amount (${request.paymentAmount}) exceeds remaining amount ($remaining)",
                     HttpStatus.BAD_REQUEST.value()
                 )
             }
 
-            payment.paymentAmount = it 
+            payment.paymentAmount = request.paymentAmount
         }
-        request.paymentDate?.let { payment.paymentDate = it }
-        request.paymentMethod?.let { payment.paymentMethod = it }
-        request.transactionId?.let { 
-            // Check duplicate
-            if (it != payment.transactionId) {
-                val existing = paymentRepository.findByTransactionId(it)
-                if (existing != null && existing.id != payment.id) {
-                    throw CustomException(
-                        "Payment with transaction ID $it already exists",
-                        HttpStatus.BAD_REQUEST.value()
-                    )
-                }
-            }
-            payment.transactionId = it 
-        }
-        request.paymentReference?.let { payment.paymentReference = it }
-        request.paymentStatus?.let { payment.paymentStatus = it }
-        request.paymentGateway?.let { payment.paymentGateway = it }
-        request.notes?.let { payment.notes = it }
 
-        payment.updatedBy = getAuthenticatedUserId()
+        payment.updatedBy = userId
         payment.updatedAt = Timestamp(System.currentTimeMillis())
 
         val updatedPayment = paymentRepository.save(payment)
 
-        // Update order payment status
-        updateOrderPaymentStatus(payment.orderId)
+        // Update order payment status if status or amount changed
+        if (request.paymentStatus != null || request.paymentAmount != null) {
+            updateOrderPaymentStatus(payment.orderId)
+        }
 
         return mapToResPayment(updatedPayment)
     }
@@ -251,40 +254,54 @@ class PaymentServiceImpl(
 
         payment.isDelete = true
         payment.deletedAt = Timestamp(System.currentTimeMillis())
-        payment.deletedBy = getAuthenticatedUserId()
+        payment.deletedBy = userId
 
         paymentRepository.save(payment)
 
-        // Update order payment status
+        // Recalculate order payment status (exclude deleted payment)
         updateOrderPaymentStatus(payment.orderId)
     }
 
     override fun getTotalPaidAmount(orderId: Int): Int {
-        return paymentRepository.getTotalPaidAmount(orderId)
+        // Validate order exists
+        orderRepository.findActiveById(orderId).orElseThrow {
+            CustomException(
+                "Order not found with id $orderId",
+                HttpStatus.NOT_FOUND.value()
+            )
+        }
+        
+        // Only return total SUCCESS payments
+        return paymentRepository.getTotalSuccessPayments(orderId)
     }
 
-    // Helper: Update order payment status based on total paid
+    // Update order payment status based on total SUCCESS payments only
     private fun updateOrderPaymentStatus(orderId: Int) {
         val order = orderRepository.findActiveById(orderId).orElse(null) ?: return
         
-        val totalPaid = paymentRepository.getTotalPaidAmount(orderId)
+        // Only count SUCCESS payments
+        val totalSuccessPaid = paymentRepository.getTotalSuccessPayments(orderId)
         
         val newStatus = when {
-            totalPaid == 0 -> com.abuamar.order_management_service.domain.enum.OrderPaymentStatus.UNPAID
-            totalPaid < order.totalAmount -> com.abuamar.order_management_service.domain.enum.OrderPaymentStatus.PARTIAL
-            totalPaid >= order.totalAmount -> com.abuamar.order_management_service.domain.enum.OrderPaymentStatus.PAID
+            totalSuccessPaid == 0 -> PaymentStatus.UNPAID
+            totalSuccessPaid < order.totalAmount -> PaymentStatus.PARTIAL
+            totalSuccessPaid >= order.totalAmount -> PaymentStatus.PAID
             else -> order.paymentStatus
         }
-
+        
         if (order.paymentStatus != newStatus) {
-            // This would need proper casting/conversion
-            // For now, just update manually
+            order.paymentStatus = newStatus
+            order.updatedBy = getAuthenticatedUserId().toString()
+            order.updatedAt = Timestamp(System.currentTimeMillis())
             orderRepository.save(order)
         }
     }
 
+    @Transactional
     override fun restorePayment(id: Int): ResPayment {
         requireAdmin()
+
+        val userId = getAuthenticatedUserId()
 
         val payment = paymentRepository.findById(id).orElseThrow {
             CustomException(
@@ -295,22 +312,20 @@ class PaymentServiceImpl(
 
         if (!payment.isDelete) {
             throw CustomException(
-                "Payment is already active with id $id",
+                "Payment with id $id is already active",
                 HttpStatus.BAD_REQUEST.value()
             )
         }
 
         payment.isDelete = false
-
         payment.deletedAt = null
         payment.deletedBy = null
-
+        payment.updatedBy = userId
         payment.updatedAt = Timestamp(System.currentTimeMillis())
-        payment.updatedBy = getAuthenticatedUserId()
 
         val restoredPayment = paymentRepository.save(payment)
 
-        // Update order payment status
+        // Recalculate order payment status (include restored payment if SUCCESS)
         updateOrderPaymentStatus(payment.orderId)
 
         return mapToResPayment(restoredPayment)

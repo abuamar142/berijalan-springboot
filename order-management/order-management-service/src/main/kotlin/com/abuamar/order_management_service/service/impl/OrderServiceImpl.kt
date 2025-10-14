@@ -6,6 +6,7 @@ import com.abuamar.order_management_service.domain.entity.MasterOrderEntity
 import com.abuamar.order_management_service.domain.dto.req.ReqCreateOrder
 import com.abuamar.order_management_service.domain.dto.req.ReqUpdateOrder
 import com.abuamar.order_management_service.domain.dto.res.ResOrder
+import com.abuamar.order_management_service.domain.enum.OrderStatus
 import com.abuamar.order_management_service.exception.CustomException
 import com.abuamar.order_management_service.repository.MasterOrderRepository
 import com.abuamar.order_management_service.service.OrderService
@@ -364,16 +365,22 @@ class OrderServiceImpl(
         val requestedCheckIn = LocalDate.parse(checkInDate)
         val requestedCheckOut = LocalDate.parse(checkOutDate)
 
-        // Find conflicting orders with status PENDING, CONFIRMED, or CHECKED_IN
+        // Find conflicting orders
         val conflicts = orderRepository.findConflictingOrders(
             roomId,
             Date.valueOf(requestedCheckIn),
             Date.valueOf(requestedCheckOut)
         )
 
-        // Filter only orders with reservation status
+        // Filter only orders with active reservation status
+        // Exclude COMPLETED and CANCELLED (room is available after these statuses)
         val reservedOrders = conflicts.filter { order ->
-            order.status.name in listOf("PENDING", "CONFIRMED", "CHECKED_IN")
+            order.status in listOf(
+                OrderStatus.PENDING,
+                OrderStatus.CONFIRMED,
+                OrderStatus.CHECKED_IN,
+                OrderStatus.CHECKED_OUT
+            )
         }
 
         // Return true if room is reserved (has conflicts), false if available

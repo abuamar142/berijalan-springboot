@@ -5,5 +5,6 @@ enum class OrderStatus {
     CONFIRMED,
     CHECKED_IN,
     CHECKED_OUT,
-    CANCELLED,
+    COMPLETED,
+    CANCELLED
 }

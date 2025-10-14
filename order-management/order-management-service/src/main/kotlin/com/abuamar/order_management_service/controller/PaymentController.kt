@@ -5,6 +5,7 @@ import com.abuamar.order_management_service.domain.dto.req.ReqUpdatePayment
 import com.abuamar.order_management_service.domain.dto.res.BaseResponse
 import com.abuamar.order_management_service.domain.dto.res.ResPayment
 import com.abuamar.order_management_service.service.PaymentService
+import com.abuamar.order_management_service.util.AppConstants
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,52 +18,63 @@ class PaymentController(
 ) {
     @GetMapping
     fun getAllPayments(): ResponseEntity<BaseResponse<List<ResPayment>>> {
-        val payments = paymentService.getAllPayments()
-
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Payments retrieved successfully",
-                data = payments
+                message = AppConstants.MSG_GET_ALL_PAYMENTS,
+                data = paymentService.getAllPayments()
             )
         )
     }
 
     @GetMapping("/{id}")
-    fun getPaymentById(@PathVariable id: Int): ResponseEntity<BaseResponse<ResPayment>> {
-        val payment = paymentService.getPaymentById(id)
-
+    fun getPaymentById(
+        @PathVariable id: Int
+    ): ResponseEntity<BaseResponse<ResPayment>> {
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Payment retrieved successfully",
-                data = payment
+                message = "${AppConstants.MSG_GET_PAYMENT_BY_ID} $id",
+                data = paymentService.getPaymentById(id)
             )
         )
     }
 
     @GetMapping("/order/{orderId}")
-    fun getPaymentsByOrderId(@PathVariable orderId: Int): ResponseEntity<BaseResponse<List<ResPayment>>> {
-        val payments = paymentService.getPaymentsByOrderId(orderId)
-
+    fun getPaymentsByOrderId(
+        @PathVariable orderId: Int
+    ): ResponseEntity<BaseResponse<List<ResPayment>>> {
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Payments for order retrieved successfully",
-                data = payments
+                message = "${AppConstants.MSG_GET_PAYMENTS_BY_ORDER} $orderId",
+                data = paymentService.getPaymentsByOrderId(orderId)
+            )
+        )
+    }
+
+    @GetMapping("/order/{orderId}/total-paid")
+    fun getTotalPaidAmount(
+        @PathVariable orderId: Int
+    ): ResponseEntity<BaseResponse<Int>> {
+        return ResponseEntity.ok(
+            BaseResponse(
+                success = true,
+                message = AppConstants.MSG_GET_TOTAL_PAID,
+                data = paymentService.getTotalPaidAmount(orderId)
             )
         )
     }
 
     @PostMapping
-    fun createPayment(@Valid @RequestBody request: ReqCreatePayment): ResponseEntity<BaseResponse<ResPayment>> {
-        val payment = paymentService.createPayment(request)
-
+    fun createPayment(
+        @Valid @RequestBody request: ReqCreatePayment
+    ): ResponseEntity<BaseResponse<ResPayment>> {
         return ResponseEntity.status(HttpStatus.CREATED).body(
             BaseResponse(
                 success = true,
-                message = "Payment created successfully",
-                data = payment
+                message = AppConstants.MSG_PAYMENT_CREATED,
+                data = paymentService.createPayment(request)
             )
         )
     }
@@ -72,49 +84,37 @@ class PaymentController(
         @PathVariable id: Int,
         @Valid @RequestBody request: ReqUpdatePayment
     ): ResponseEntity<BaseResponse<ResPayment>> {
-        val payment = paymentService.updatePayment(id, request)
-
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Payment updated successfully",
-                data = payment
+                message = AppConstants.MSG_PAYMENT_UPDATED,
+                data = paymentService.updatePayment(id, request)
             )
         )
     }
 
     @DeleteMapping("/{id}")
-    fun deletePayment(@PathVariable id: Int): ResponseEntity<BaseResponse<Unit>> {
+    fun deletePayment(
+        @PathVariable id: Int
+    ): ResponseEntity<BaseResponse<Unit>> {
         paymentService.deletePayment(id)
-
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Payment deleted successfully",
-                data = Unit
-            )
-        )
-    }
-
-    @GetMapping("/order/{orderId}/total-paid")
-    fun getTotalPaidAmount(@PathVariable orderId: Int): ResponseEntity<BaseResponse<Int>> {
-        val totalPaid = paymentService.getTotalPaidAmount(orderId)
-
-        return ResponseEntity.ok(
-            BaseResponse(
-                success = true,
-                message = "Total paid amount retrieved successfully",
-                data = totalPaid
+                message = AppConstants.MSG_PAYMENT_DELETED,
+                data = null
             )
         )
     }
 
     @PatchMapping("/{id}")
-    fun restorePayment(@PathVariable id: Int): ResponseEntity<BaseResponse<ResPayment>> {
+    fun restorePayment(
+        @PathVariable id: Int
+    ): ResponseEntity<BaseResponse<ResPayment>> {
         return ResponseEntity.ok(
             BaseResponse(
                 success = true,
-                message = "Success restore payment with id $id",
+                message = AppConstants.MSG_PAYMENT_RESTORED,
                 data = paymentService.restorePayment(id)
             )
         )

@@ -30,7 +30,7 @@ object AppConstants {
     const val ERR_ROOM_NOT_FOUND_EXTERNAL = "Room not found in hotel management service"
     const val ERR_USER_NOT_FOUND_EXTERNAL = "User not found in user management service"
     
-    // Success Messages
+    // Success Messages - Order
     const val MSG_ORDER_CREATED = "Order created successfully"
     const val MSG_ORDER_UPDATED = "Order updated successfully"
     const val MSG_ORDER_DELETED = "Order deleted successfully"
@@ -38,4 +38,22 @@ object AppConstants {
     const val MSG_GET_ALL_ORDERS = "Success get all orders"
     const val MSG_GET_ORDER_BY_ID = "Success get order by id"
     const val MSG_GET_ORDERS_BY_USER = "Success get orders by user"
+    
+    // Success Messages - Payment
+    const val MSG_PAYMENT_CREATED = "Payment created successfully. Status: PENDING (awaiting admin approval)"
+    const val MSG_PAYMENT_UPDATED = "Payment updated successfully"
+    const val MSG_PAYMENT_DELETED = "Payment deleted successfully"
+    const val MSG_PAYMENT_RESTORED = "Payment restored successfully"
+    const val MSG_GET_ALL_PAYMENTS = "Success get all payments"
+    const val MSG_GET_PAYMENT_BY_ID = "Success get payment by id"
+    const val MSG_GET_PAYMENTS_BY_ORDER = "Success get payments by order"
+    const val MSG_GET_TOTAL_PAID = "Success get total paid amount (SUCCESS payments only)"
+    
+    // Error Messages - Payment
+    const val ERR_PAYMENT_NOT_FOUND = "Payment not found"
+    const val ERR_NO_PAYMENTS_FOUND = "No payments found"
+    const val ERR_PAYMENT_AMOUNT_EXCEEDS = "Payment amount exceeds remaining amount"
+    const val ERR_PAYMENT_REFERENCE_EXISTS = "Payment reference already exists"
+    const val ERR_CANNOT_UPDATE_SUCCESS_PAYMENT = "Cannot update amount for SUCCESS payments"
+    const val ERR_PAYMENT_ALREADY_ACTIVE = "Payment is already active"
 }

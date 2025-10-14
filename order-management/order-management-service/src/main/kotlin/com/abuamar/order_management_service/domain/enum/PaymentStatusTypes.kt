@@ -10,9 +10,7 @@ enum class OrderPaymentStatus {
 
 // For individual payment transaction status
 enum class TransactionPaymentStatus {
-    PENDING,
-    SUCCESS,
-    FAILED,
-    CANCELLED,
-    REFUNDED
+    PENDING,   // Default when customer creates payment (awaiting admin approval)
+    SUCCESS,   // Admin approved payment (counts toward order total)
+    FAILED     // Admin rejected payment (does not count)
 }
